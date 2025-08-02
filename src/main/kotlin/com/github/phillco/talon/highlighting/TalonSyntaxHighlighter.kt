@@ -35,6 +35,8 @@ class TalonSyntaxHighlighter : SyntaxHighlighterBase() {
             TalonTokenTypes.REGEX -> arrayOf(REGEX)
             TalonTokenTypes.PATH -> arrayOf(PATH)
             TalonTokenTypes.WORD -> arrayOf(COMMAND_WORD)
+            TalonTokenTypes.CAPTURE -> arrayOf(CAPTURE)
+            TalonTokenTypes.LIST_REFERENCE -> arrayOf(LIST_REF)
             
             // Function and action names
             TalonTokenTypes.FUNCTION_NAME -> arrayOf(FUNCTION_CALL)
@@ -105,6 +107,16 @@ class TalonSyntaxHighlighter : SyntaxHighlighterBase() {
         private val COMMAND_WORD = TextAttributesKey.createTextAttributesKey(
             "TALON_COMMAND_WORD",
             DefaultLanguageHighlighterColors.LOCAL_VARIABLE
+        )
+        
+        private val CAPTURE = TextAttributesKey.createTextAttributesKey(
+            "TALON_CAPTURE",
+            DefaultLanguageHighlighterColors.PARAMETER
+        )
+        
+        private val LIST_REF = TextAttributesKey.createTextAttributesKey(
+            "TALON_LIST_REF",
+            DefaultLanguageHighlighterColors.CONSTANT
         )
         
         private val FUNCTION_CALL = TextAttributesKey.createTextAttributesKey(

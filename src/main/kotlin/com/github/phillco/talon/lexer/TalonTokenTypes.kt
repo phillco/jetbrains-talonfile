@@ -53,6 +53,8 @@ object TalonTokenTypes {
     @JvmField val FUNCTION_NAME = IElementType("FUNCTION_NAME", TalonLanguage)
     @JvmField val VARIABLE_REFERENCE = IElementType("VARIABLE_REFERENCE", TalonLanguage)
     @JvmField val PATH = IElementType("PATH", TalonLanguage)
+    @JvmField val CAPTURE = IElementType("CAPTURE", TalonLanguage)
+    @JvmField val LIST_REFERENCE = IElementType("LIST_REFERENCE", TalonLanguage)
     
     // Special
     @JvmField val WHITE_SPACE = TokenType.WHITE_SPACE

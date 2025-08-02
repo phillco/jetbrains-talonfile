@@ -18,10 +18,12 @@ class TalonLexer : LexerBase() {
         this.startOffset = startOffset
         this.endOffset = endOffset
         this.currentPosition = startOffset
+        // Restore state from initialState
+        this.inCommandPattern = initialState == 0
         advance()
     }
     
-    override fun getState(): Int = 0
+    override fun getState(): Int = if (inCommandPattern) 0 else 1
     
     override fun getTokenType(): IElementType? = tokenType
     
@@ -64,6 +66,16 @@ class TalonLexer : LexerBase() {
                 tokenType = TalonTokenTypes.COMMENT
             }
             
+            // Separator lines (---)
+            buffer[currentPosition] == '-' && isAtSeparatorLine() -> {
+                while (currentPosition < endOffset && buffer[currentPosition] == '-') {
+                    currentPosition++
+                }
+                tokenEndOffset = currentPosition
+                tokenType = TalonTokenTypes.DASH
+                inCommandPattern = true  // Reset state after separator
+            }
+            
             // Strings
             buffer[currentPosition] == '"' -> {
                 currentPosition++
@@ -87,6 +99,42 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.NUMBER
+            }
+            
+            // Captures and lists (<user.text>, <number>, {user.vocabulary})
+            buffer[currentPosition] == '<' -> {
+                currentPosition++
+                while (currentPosition < endOffset && buffer[currentPosition] != '>' && buffer[currentPosition] != '\n') {
+                    currentPosition++
+                }
+                if (currentPosition < endOffset && buffer[currentPosition] == '>') {
+                    currentPosition++ // consume closing >
+                }
+                tokenEndOffset = currentPosition
+                tokenType = TalonTokenTypes.CAPTURE
+            }
+            
+            // List references {user.vocabulary}
+            buffer[currentPosition] == '{' && inCommandPattern -> {
+                val start = currentPosition
+                currentPosition++
+                while (currentPosition < endOffset && buffer[currentPosition] != '}' && buffer[currentPosition] != '\n') {
+                    currentPosition++
+                }
+                if (currentPosition < endOffset && buffer[currentPosition] == '}') {
+                    currentPosition++ // consume closing }
+                }
+                tokenEndOffset = currentPosition
+                // Check if it looks like a list reference (contains dots)
+                val content = buffer.substring(start + 1, minOf(currentPosition - 1, endOffset))
+                if (content.contains('.')) {
+                    tokenType = TalonTokenTypes.LIST_REFERENCE
+                } else {
+                    // Not a list reference, just a regular brace
+                    currentPosition = start + 1  // Reset to just after {
+                    tokenEndOffset = currentPosition
+                    tokenType = TalonTokenTypes.LBRACE
+                }
             }
             
             // Regex patterns (^pattern$)
@@ -216,4 +264,23 @@ class TalonLexer : LexerBase() {
     override fun getBufferSequence(): CharSequence = buffer
     
     override fun getBufferEnd(): Int = endOffset
+    
+    private fun isAtSeparatorLine(): Boolean {
+        // Check if we're at the start of a line with 3+ dashes
+        var pos = currentPosition
+        var dashCount = 0
+        
+        // Count dashes
+        while (pos < endOffset && buffer[pos] == '-') {
+            dashCount++
+            pos++
+        }
+        
+        // Check if line ends after dashes (or has only whitespace)
+        while (pos < endOffset && buffer[pos] in " \t\r") {
+            pos++
+        }
+        
+        return dashCount >= 3 && (pos >= endOffset || buffer[pos] == '\n')
+    }
 }

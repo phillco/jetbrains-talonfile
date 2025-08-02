@@ -51,5 +51,10 @@
         <lang.braceMatcher
                 language="Talon"
                 implementationClass="com.github.phillco.talon.TalonBraceMatcher"/>
+                
+        <!-- Code folding -->
+        <lang.foldingBuilder
+                language="Talon"
+                implementationClass="com.github.phillco.talon.folding.TalonFoldingBuilder"/>
     </extensions>
 </idea-plugin>
