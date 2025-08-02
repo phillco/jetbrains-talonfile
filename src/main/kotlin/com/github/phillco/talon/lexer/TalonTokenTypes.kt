@@ -23,6 +23,8 @@ object TalonTokenTypes {
     @JvmField val DOLLAR = IElementType("DOLLAR", TalonLanguage)
     @JvmField val LESS = IElementType("LESS", TalonLanguage)
     @JvmField val GREATER = IElementType("GREATER", TalonLanguage)
+    @JvmField val CARET = IElementType("CARET", TalonLanguage)
+    @JvmField val UNDERSCORE = IElementType("UNDERSCORE", TalonLanguage)
     
     // Keywords
     @JvmField val AND = IElementType("AND", TalonLanguage)
@@ -37,12 +39,20 @@ object TalonTokenTypes {
     @JvmField val GAMEPAD = IElementType("GAMEPAD", TalonLanguage)
     @JvmField val NOISE = IElementType("NOISE", TalonLanguage)
     @JvmField val PARROT = IElementType("PARROT", TalonLanguage)
+    @JvmField val MODE = IElementType("MODE", TalonLanguage)
+    @JvmField val USER = IElementType("USER", TalonLanguage)
+    @JvmField val SELF = IElementType("SELF", TalonLanguage)
     
     // Literals
     @JvmField val IDENTIFIER = IElementType("IDENTIFIER", TalonLanguage)
     @JvmField val NUMBER = IElementType("NUMBER", TalonLanguage)
     @JvmField val STRING = IElementType("STRING", TalonLanguage)
     @JvmField val WORD = IElementType("WORD", TalonLanguage)
+    @JvmField val REGEX = IElementType("REGEX", TalonLanguage)
+    @JvmField val ACTION_NAME = IElementType("ACTION_NAME", TalonLanguage)
+    @JvmField val FUNCTION_NAME = IElementType("FUNCTION_NAME", TalonLanguage)
+    @JvmField val VARIABLE_REFERENCE = IElementType("VARIABLE_REFERENCE", TalonLanguage)
+    @JvmField val PATH = IElementType("PATH", TalonLanguage)
     
     // Special
     @JvmField val WHITE_SPACE = TokenType.WHITE_SPACE

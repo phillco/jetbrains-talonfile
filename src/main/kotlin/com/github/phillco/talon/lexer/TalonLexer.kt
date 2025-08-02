@@ -11,6 +11,7 @@ class TalonLexer : LexerBase() {
     private var tokenType: IElementType? = null
     private var tokenStartOffset: Int = 0
     private var tokenEndOffset: Int = 0
+    private var inCommandPattern: Boolean = true  // Track if we're before or after colon
     
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
@@ -51,6 +52,7 @@ class TalonLexer : LexerBase() {
                 currentPosition++
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.NEW_LINE
+                inCommandPattern = true  // Reset at new line
             }
             
             // Comments
@@ -87,9 +89,51 @@ class TalonLexer : LexerBase() {
                 tokenType = TalonTokenTypes.NUMBER
             }
             
+            // Regex patterns (^pattern$)
+            buffer[currentPosition] == '^' -> {
+                currentPosition++
+                while (currentPosition < endOffset && buffer[currentPosition] != '$' && buffer[currentPosition] != '\n') {
+                    if (buffer[currentPosition] == '\\' && currentPosition + 1 < endOffset) {
+                        currentPosition++
+                    }
+                    currentPosition++
+                }
+                if (currentPosition < endOffset && buffer[currentPosition] == '$') {
+                    currentPosition++ // consume closing $
+                }
+                tokenEndOffset = currentPosition
+                tokenType = TalonTokenTypes.REGEX
+            }
+            
+            // Paths (starting with /)
+            buffer[currentPosition] == '/' && currentPosition + 1 < endOffset && 
+            (buffer[currentPosition + 1].isLetterOrDigit() || buffer[currentPosition + 1] in "._-") -> {
+                currentPosition++
+                while (currentPosition < endOffset && 
+                       buffer[currentPosition] != '\n' && 
+                       buffer[currentPosition] != '"' &&
+                       buffer[currentPosition] != ')' &&
+                       buffer[currentPosition] != ',') {
+                    currentPosition++
+                }
+                tokenEndOffset = currentPosition
+                tokenType = TalonTokenTypes.PATH
+            }
+            
             // Identifiers and keywords
             buffer[currentPosition].isLetter() || buffer[currentPosition] == '_' -> {
                 val start = currentPosition
+                
+                // Check if it's a function call or action (ends with parenthesis)
+                var lookahead = currentPosition
+                while (lookahead < endOffset && 
+                       (buffer[lookahead].isLetterOrDigit() || buffer[lookahead] in "_.-")) {
+                    lookahead++
+                }
+                
+                val hasParenthesis = lookahead < endOffset && buffer[lookahead] == '('
+                
+                // Consume the identifier
                 while (currentPosition < endOffset && 
                        (buffer[currentPosition].isLetterOrDigit() || buffer[currentPosition] in "_.-")) {
                     currentPosition++
@@ -97,6 +141,8 @@ class TalonLexer : LexerBase() {
                 tokenEndOffset = currentPosition
                 
                 val text = buffer.substring(start, currentPosition)
+                
+                // Check if it's a keyword first
                 tokenType = when (text) {
                     "and" -> TalonTokenTypes.AND
                     "not" -> TalonTokenTypes.NOT
@@ -110,14 +156,37 @@ class TalonLexer : LexerBase() {
                     "gamepad" -> TalonTokenTypes.GAMEPAD
                     "noise" -> TalonTokenTypes.NOISE
                     "parrot" -> TalonTokenTypes.PARROT
-                    else -> TalonTokenTypes.IDENTIFIER
+                    "mode" -> TalonTokenTypes.MODE
+                    "user" -> TalonTokenTypes.USER
+                    "self" -> TalonTokenTypes.SELF
+                    else -> {
+                        when {
+                            hasParenthesis -> {
+                                // Check if it's a known action pattern
+                                if (text.startsWith("user.") || text.startsWith("app.") || 
+                                    text.startsWith("win.") || text.startsWith("edit.") ||
+                                    text.startsWith("key.") || text.startsWith("mouse.") ||
+                                    text == "insert" || text == "sleep" || text == "print") {
+                                    TalonTokenTypes.ACTION_NAME
+                                } else {
+                                    TalonTokenTypes.FUNCTION_NAME
+                                }
+                            }
+                            text.contains('.') -> TalonTokenTypes.VARIABLE_REFERENCE
+                            inCommandPattern && !text.contains('.') -> TalonTokenTypes.WORD
+                            else -> TalonTokenTypes.IDENTIFIER
+                        }
+                    }
                 }
             }
             
             // Single character tokens
             else -> {
                 tokenType = when (buffer[currentPosition]) {
-                    ':' -> TalonTokenTypes.COLON
+                    ':' -> {
+                        inCommandPattern = false  // After colon, we're in action part
+                        TalonTokenTypes.COLON
+                    }
                     '(' -> TalonTokenTypes.LPAREN
                     ')' -> TalonTokenTypes.RPAREN
                     '[' -> TalonTokenTypes.LBRACKET
@@ -134,6 +203,8 @@ class TalonLexer : LexerBase() {
                     '$' -> TalonTokenTypes.DOLLAR
                     '<' -> TalonTokenTypes.LESS
                     '>' -> TalonTokenTypes.GREATER
+                    '^' -> TalonTokenTypes.CARET
+                    '_' -> TalonTokenTypes.UNDERSCORE
                     else -> TalonTokenTypes.BAD_CHARACTER
                 }
                 currentPosition++
