@@ -1,15 +1,55 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.phillco.jetbrainstalonfile</id>
-    <name>jetbrains-talonfile</name>
-    <vendor>phillco</vendor>
+    <id>com.github.phillco.talon</id>
+    <name>Talon Language Support</name>
+    <vendor email="support@example.com" url="https://github.com/phillco">phillco</vendor>
+
+    <description><![CDATA[
+      Talon language support for JetBrains IDEs.<br><br>
+      
+      <b>Features:</b><br>
+      <ul>
+        <li>Syntax highlighting for .talon files</li>
+        <li>File type recognition</li>
+        <li>Basic code structure</li>
+        <li>Comment support</li>
+      </ul>
+      
+      <br>
+      Talon is a hands-free programming language for voice coding.
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <resource-bundle>messages.TalonBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.phillco.jetbrainstalonfile.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.phillco.jetbrainstalonfile.startup.MyProjectActivity" />
+        <!-- File type registration -->
+        <fileType
+                name="Talon"
+                implementationClass="com.github.phillco.talon.TalonFileType"
+                fieldName="INSTANCE"
+                language="Talon"
+                extensions="talon"/>
+                
+        <!-- Language registration -->
+        <lang.parserDefinition
+                language="Talon"
+                implementationClass="com.github.phillco.talon.parser.TalonParserDefinition"/>
+                
+        <!-- Syntax highlighting -->
+        <lang.syntaxHighlighterFactory
+                language="Talon"
+                implementationClass="com.github.phillco.talon.highlighting.TalonSyntaxHighlighterFactory"/>
+                
+        <!-- Commenter -->
+        <lang.commenter
+                language="Talon"
+                implementationClass="com.github.phillco.talon.TalonCommenter"/>
+                
+        <!-- Bracket matching -->
+        <lang.braceMatcher
+                language="Talon"
+                implementationClass="com.github.phillco.talon.TalonBraceMatcher"/>
     </extensions>
 </idea-plugin>

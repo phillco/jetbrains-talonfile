@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g id="talon-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#7A5FFF" x="2" y="2" width="12" height="12" rx="2"/>
+        <text font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFFFFF">
+            <tspan x="5" y="11">T</tspan>
+        </text>
+    </g>
+</svg>
