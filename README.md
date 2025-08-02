@@ -1,35 +1,55 @@
-# jetbrains-talonfile
+# JetBrains Talon Language Support
 
 ![Build](https://github.com/phillco/jetbrains-talonfile/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties) and [pluginName](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-- [ ] Configure the [CODECOV_TOKEN](https://docs.codecov.com/docs/quick-start) secret for automated test coverage reports on PRs
-
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+A JetBrains IDE plugin that provides comprehensive language support for [Talon](https://talonvoice.com/) files (`.talon`). Talon is a hands-free programming tool that enables voice-controlled coding through customizable voice commands.
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
+This plugin enhances the development experience for Talon users by providing:
 
-To keep everything working, do not remove `<!-- ... -->` sections. 
+- **Syntax Highlighting** - Full syntax coloring for Talon language constructs including commands, contexts, actions, captures, and lists
+- **File Type Recognition** - Proper `.talon` file handling with custom icon
+- **Code Folding** - Collapse/expand multiline Talon rules and commands
+- **Smart Commenting** - Comment entire rules with a single action (Ctrl+Shift+/)
+- **Bracket Matching** - Automatic matching of parentheses, brackets, and braces
+- **Code Structure** - Understanding of Talon's voice command → action mapping structure
+
+Perfect for developers who use Talon for voice coding and need proper IDE support for editing their Talon configuration files.
 <!-- Plugin description end -->
+
+## Features
+
+### Syntax Highlighting
+The plugin provides syntax highlighting for all Talon language elements:
+- Comments (`#`)
+- Context specifications (`app:`, `mode:`, `tag:`, etc.)
+- Voice commands and patterns
+- Actions and function calls
+- Captures (`<user.text>`) and lists (`{user.list}`)
+- Keywords, operators, and literals
+
+### Smart Rule Commenting
+Use **Ctrl+Shift+/** to intelligently comment/uncomment entire Talon rules:
+```talon
+# Automatically comments the entire rule
+some voice command:
+    action_one()
+    action_two()
+    action_three()
+```
+
+### Code Structure Support
+- Automatic bracket/brace matching
+- Code folding for multiline commands
+- Proper indentation handling
 
 ## Installation
 
 - Using the IDE built-in plugin system:
   
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "jetbrains-talonfile"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Talon Language Support"</kbd> >
   <kbd>Install</kbd>
   
 - Using JetBrains Marketplace:
@@ -44,9 +64,28 @@ To keep everything working, do not remove `<!-- ... -->` sections.
   Download the [latest release](https://github.com/phillco/jetbrains-talonfile/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Requirements
+
+- IntelliJ IDEA 2024.3.6 or later (Community or Ultimate)
+- Also compatible with other JetBrains IDEs (PyCharm, WebStorm, etc.)
+
+## Development
+
+This plugin is built using:
+- Kotlin
+- IntelliJ Platform SDK
+- Gradle with Kotlin DSL
+
+To build from source:
+```bash
+./gradlew build
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation
