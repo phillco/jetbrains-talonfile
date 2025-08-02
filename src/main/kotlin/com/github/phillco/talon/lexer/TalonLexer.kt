@@ -12,6 +12,7 @@ class TalonLexer : LexerBase() {
     private var tokenStartOffset: Int = 0
     private var tokenEndOffset: Int = 0
     private var inCommandPattern: Boolean = true  // Track if we're before or after colon
+    private var lineStart: Boolean = true  // Track if we're at the start of a line
     
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
@@ -19,11 +20,17 @@ class TalonLexer : LexerBase() {
         this.endOffset = endOffset
         this.currentPosition = startOffset
         // Restore state from initialState
-        this.inCommandPattern = initialState == 0
+        this.inCommandPattern = (initialState and 1) == 0
+        this.lineStart = (initialState and 2) != 0
         advance()
     }
     
-    override fun getState(): Int = if (inCommandPattern) 0 else 1
+    override fun getState(): Int {
+        var state = 0
+        if (!inCommandPattern) state = state or 1
+        if (lineStart) state = state or 2
+        return state
+    }
     
     override fun getTokenType(): IElementType? = tokenType
     
@@ -47,6 +54,7 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.WHITE_SPACE
+                // Don't change lineStart flag for whitespace
             }
             
             // Newlines
@@ -54,7 +62,7 @@ class TalonLexer : LexerBase() {
                 currentPosition++
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.NEW_LINE
-                inCommandPattern = true  // Reset at new line
+                lineStart = true  // Mark that next token starts a line
             }
             
             // Comments
@@ -64,16 +72,18 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.COMMENT
+                lineStart = false
             }
             
             // Separator lines (---)
-            buffer[currentPosition] == '-' && isAtSeparatorLine() -> {
+            lineStart && buffer[currentPosition] == '-' && isAtSeparatorLine() -> {
                 while (currentPosition < endOffset && buffer[currentPosition] == '-') {
                     currentPosition++
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.DASH
                 inCommandPattern = true  // Reset state after separator
+                lineStart = false
             }
             
             // Strings
@@ -90,6 +100,7 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.STRING
+                lineStart = false
             }
             
             // Numbers
@@ -99,6 +110,7 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.NUMBER
+                lineStart = false
             }
             
             // Captures and lists (<user.text>, <number>, {user.vocabulary})
@@ -112,6 +124,7 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.CAPTURE
+                lineStart = false
             }
             
             // List references {user.vocabulary}
@@ -135,6 +148,7 @@ class TalonLexer : LexerBase() {
                     tokenEndOffset = currentPosition
                     tokenType = TalonTokenTypes.LBRACE
                 }
+                lineStart = false
             }
             
             // Regex patterns (^pattern$)
@@ -151,6 +165,7 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.REGEX
+                lineStart = false
             }
             
             // Paths (starting with /)
@@ -166,10 +181,17 @@ class TalonLexer : LexerBase() {
                 }
                 tokenEndOffset = currentPosition
                 tokenType = TalonTokenTypes.PATH
+                lineStart = false
             }
             
             // Identifiers and keywords
             buffer[currentPosition].isLetter() || buffer[currentPosition] == '_' -> {
+                // If we're at line start and see a non-whitespace character, reset to command pattern
+                if (lineStart) {
+                    inCommandPattern = true
+                    lineStart = false
+                }
+                
                 val start = currentPosition
                 
                 // Check if it's a function call or action (ends with parenthesis)
@@ -233,6 +255,7 @@ class TalonLexer : LexerBase() {
                 tokenType = when (buffer[currentPosition]) {
                     ':' -> {
                         inCommandPattern = false  // After colon, we're in action part
+                        lineStart = false
                         TalonTokenTypes.COLON
                     }
                     '(' -> TalonTokenTypes.LPAREN
@@ -257,6 +280,7 @@ class TalonLexer : LexerBase() {
                 }
                 currentPosition++
                 tokenEndOffset = currentPosition
+                lineStart = false
             }
         }
     }
