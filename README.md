@@ -47,22 +47,32 @@ some voice command:
 
 ## Installation
 
-- Using the IDE built-in plugin system:
-  
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Talon Language Support"</kbd> >
-  <kbd>Install</kbd>
-  
-- Using JetBrains Marketplace:
+**Note:** This plugin is not yet available on the JetBrains Marketplace. You'll need to build it yourself and install it manually.
 
-  Go to [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID) and install it by clicking the <kbd>Install to ...</kbd> button in case your IDE is running.
+### Building and Installing
 
-  You can also download the [latest release](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID/versions) from JetBrains Marketplace and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/phillco/jetbrains-talonfile.git
+   cd jetbrains-talonfile
+   ```
 
-- Manually:
+2. **Build the plugin:**
+   ```bash
+   ./gradlew buildPlugin
+   ```
+   This will create a `.zip` file in `build/distributions/`
 
-  Download the [latest release](https://github.com/phillco/jetbrains-talonfile/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+3. **Install in your IDE:**
+   - Open your JetBrains IDE
+   - Go to <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+   - Select the `.zip` file from `build/distributions/`
+   - Restart your IDE
+
+### Future Installation Methods
+
+Once the plugin is published to the JetBrains Marketplace, you'll be able to install it directly through:
+- <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > Search for "Talon Language Support"
 
 ## Requirements
 
