@@ -7,9 +7,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.FoldingGroup
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
-import com.github.phillco.talon.lexer.TalonTokenTypes
-import com.github.phillco.talon.parser.TalonElementTypes
 import com.github.phillco.talon.psi.TalonFile
 
 class TalonFoldingBuilder : FoldingBuilderEx() {
@@ -17,61 +14,98 @@ class TalonFoldingBuilder : FoldingBuilderEx() {
         if (root !is TalonFile) return emptyArray()
         
         val descriptors = mutableListOf<FoldingDescriptor>()
+        val text = document.text
         
-        // Find all commands and bindings that span multiple lines
-        val visitor = object : com.intellij.psi.PsiRecursiveElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                super.visitElement(element)
+        // Find multiline constructs by analyzing the text directly
+        var lineStart = 0
+        var inMultilineConstruct = false
+        var constructStartLine = -1
+        var colonLine = -1
+        
+        for (lineNum in 0 until document.lineCount) {
+            val lineEnd = document.getLineEndOffset(lineNum)
+            val line = text.substring(lineStart, lineEnd).trim()
+            
+            when {
+                // Check for command/binding start (ends with colon)
+                line.endsWith(":") && !line.startsWith("#") -> {
+                    colonLine = lineNum
+                    constructStartLine = lineNum
+                    inMultilineConstruct = true
+                }
                 
-                val node = element.node
-                if (node != null && isFoldableElement(node)) {
-                    val range = getRangeToFold(node, document)
-                    if (range != null && range.length > 0) {
-                        descriptors.add(FoldingDescriptor(node, range, FoldingGroup.newGroup("talon")))
+                // Check for separator line
+                line.matches(Regex("^-{3,}$")) -> {
+                    // End any current construct
+                    if (inMultilineConstruct && colonLine >= 0 && lineNum > colonLine + 1) {
+                        createFoldingDescriptor(root, document, colonLine, lineNum - 1, descriptors)
+                    }
+                    inMultilineConstruct = false
+                    colonLine = -1
+                }
+                
+                // Empty line or line with only whitespace
+                line.isEmpty() -> {
+                    // End current construct if we have one
+                    if (inMultilineConstruct && colonLine >= 0 && lineNum > colonLine + 1) {
+                        createFoldingDescriptor(root, document, colonLine, lineNum - 1, descriptors)
+                    }
+                    inMultilineConstruct = false
+                    colonLine = -1
+                }
+                
+                // Non-empty line
+                else -> {
+                    // If we're not in a construct and this line doesn't start with whitespace,
+                    // it might be a new command
+                    if (!inMultilineConstruct && !line.startsWith(" ") && !line.startsWith("\t")) {
+                        // Check if it's a potential command start (but wait for colon)
+                        // Do nothing for now
+                    }
+                    // If we are in a construct and hit a non-indented line, end the construct
+                    else if (inMultilineConstruct && colonLine >= 0 && 
+                             !text[lineStart].isWhitespace() && !line.startsWith("#")) {
+                        if (lineNum > colonLine + 1) {
+                            createFoldingDescriptor(root, document, colonLine, lineNum - 1, descriptors)
+                        }
+                        inMultilineConstruct = false
+                        colonLine = -1
                     }
                 }
             }
+            
+            lineStart = if (lineNum + 1 < document.lineCount) {
+                document.getLineStartOffset(lineNum + 1)
+            } else {
+                lineEnd
+            }
         }
         
-        root.accept(visitor)
+        // Handle any remaining construct at end of file
+        if (inMultilineConstruct && colonLine >= 0 && document.lineCount > colonLine + 1) {
+            createFoldingDescriptor(root, document, colonLine, document.lineCount - 1, descriptors)
+        }
         
         return descriptors.toTypedArray()
     }
     
-    private fun isFoldableElement(node: ASTNode): Boolean {
-        return when (node.elementType) {
-            TalonElementTypes.COMMAND,
-            TalonElementTypes.BINDING,
-            TalonElementTypes.STATEMENT -> true
-            else -> false
+    private fun createFoldingDescriptor(
+        root: PsiElement,
+        document: Document,
+        startLine: Int,
+        endLine: Int,
+        descriptors: MutableList<FoldingDescriptor>
+    ) {
+        val startOffset = document.getLineEndOffset(startLine)
+        val endOffset = document.getLineEndOffset(endLine)
+        
+        if (endOffset > startOffset) {
+            val range = TextRange(startOffset, endOffset)
+            descriptors.add(FoldingDescriptor(root.node, range, FoldingGroup.newGroup("talon")))
         }
     }
     
-    private fun getRangeToFold(node: ASTNode, document: Document): TextRange? {
-        val startOffset = node.startOffset
-        val endOffset = node.startOffset + node.textLength
-        
-        // Check if this spans multiple lines
-        val startLine = document.getLineNumber(startOffset)
-        val endLine = document.getLineNumber(endOffset)
-        
-        if (endLine > startLine) {
-            // Fold from the end of the first line to the end of the block
-            val firstLineEnd = document.getLineEndOffset(startLine)
-            return TextRange(firstLineEnd, endOffset)
-        }
-        
-        return null
-    }
-    
-    override fun getPlaceholderText(node: ASTNode): String {
-        return when (node.elementType) {
-            TalonElementTypes.COMMAND -> " ..."
-            TalonElementTypes.BINDING -> " { ... }"
-            TalonElementTypes.STATEMENT -> " ..."
-            else -> "..."
-        }
-    }
+    override fun getPlaceholderText(node: ASTNode): String = " ..."
     
     override fun isCollapsedByDefault(node: ASTNode): Boolean = false
 }
