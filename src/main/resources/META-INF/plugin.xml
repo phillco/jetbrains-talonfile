@@ -56,5 +56,30 @@
         <lang.foldingBuilder
                 language="Talon"
                 implementationClass="com.github.phillco.talon.folding.TalonFoldingBuilder"/>
+                
     </extensions>
+    
+    <actions>
+        <!-- Smart comment action that replaces default for Talon files -->
+        <action id="Talon.SmartComment"
+                class="com.github.phillco.talon.actions.TalonSmartCommentAction"
+                text="Comment with Line Comment"
+                description="Smart comment that comments entire rule when on key line">
+            <!-- Override the default comment action for Talon files -->
+            <override-text place="MainMenu" text="Comment with Line Comment"/>
+            <add-to-group group-id="CommentGroup" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl SLASH"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta SLASH"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta SLASH"/>
+        </action>
+        
+        <!-- Comment entire rule action (separate action) -->
+        <action id="Talon.CommentEntireRule"
+                class="com.github.phillco.talon.actions.CommentEntireRuleAction"
+                text="Comment Entire Talon Rule"
+                description="Comment or uncomment an entire Talon rule">
+            <add-to-group group-id="CommentGroup" anchor="after" relative-to-action="CommentByLineComment"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift SLASH"/>
+        </action>
+    </actions>
 </idea-plugin>
